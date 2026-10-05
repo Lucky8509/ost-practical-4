@@ -1,0 +1,54 @@
+name: Django CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Django system checks
+        run: |
+          python manage.py check
+
+      - name: Run database migrations
+        run: |
+          python manage.py migrate
+
+      - name: Run Django tests
+        run: |
+          python manage.py test
+
+      - name: Create deployment package
+        run: |
+          mkdir deployment
+          cp -r productproject deployment/
+          cp -r products deployment/
+          cp manage.py deployment/
+          cp requirements.txt deployment/
+
+      - name: Upload deployment artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: django-application
+          path: deployment/
